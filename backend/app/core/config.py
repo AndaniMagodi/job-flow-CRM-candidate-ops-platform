@@ -5,6 +5,7 @@ class Settings(BaseSettings):
     app_name: str = "JobFlow API"
     app_env: str = "dev"
     database_url: str
+    secret_key: str
 
     model_config = SettingsConfigDict(
         env_file=".env",

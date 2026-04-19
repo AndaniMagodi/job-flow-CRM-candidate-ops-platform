@@ -9,6 +9,7 @@ class ApplicationCreate(BaseModel):
     role: str
     status: str = "Applied"
     date_applied: date
+    follow_up_date: Optional[date] = None
     link: Optional[str] = None
     notes: Optional[str] = None
 
@@ -28,7 +29,12 @@ class ApplicationResponse(BaseModel):
     role: str
     status: str
     date_applied: date
+    follow_up_date: Optional[date] = None
     link: Optional[str] = None
     notes: Optional[str] = None
 
     model_config = {"from_attributes": True}
+
+
+class FollowUpUpdate(BaseModel):
+    follow_up_date: date

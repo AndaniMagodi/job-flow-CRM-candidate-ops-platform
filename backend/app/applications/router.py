@@ -1,3 +1,4 @@
+from datetime import date
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
@@ -8,9 +9,11 @@ from app.models.users import User
 from app.models.applications import Application
 from app.activities.service import log_activity
 
-from .schemas import ApplicationCreate, ApplicationUpdate, ApplicationResponse
+from .schemas import ApplicationCreate, ApplicationUpdate, ApplicationResponse, FollowUpUpdate
 
 router = APIRouter(prefix="/applications", tags=["applications"])
+
+
 
 
 # GET ALL
@@ -134,3 +137,44 @@ def add_note(
     db.commit()
     db.refresh(app)
     return app
+
+@router.patch("/{app_id}/follow-up", response_model=ApplicationResponse)
+def set_follow_up(
+    app_id: int,
+    body: FollowUpUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_user)
+):
+    app = db.query(Application).filter(
+        Application.id == app_id,
+        Application.user_id == current_user.id
+    ).first()
+
+    if not app:
+        raise HTTPException(status_code=404, detail="Application not found")
+
+    app.follow_up_date = body.follow_up_date
+
+    log_activity(
+        db,
+        user_id=current_user.id,
+        application_id=app.id,
+        event="follow_up_set",
+        detail=f"Follow-up set for {body.follow_up_date}"
+    )
+
+    db.commit()
+    db.refresh(app)
+    return app
+
+@router.get("/due", response_model=List[ApplicationResponse])
+def get_due_applications(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_user)
+):
+    today = date.today()
+    return db.query(Application).filter(
+        Application.user_id == current_user.id,
+        Application.follow_up_date <= today,
+        Application.status.notin_(["Offer", "Rejected"])
+    ).order_by(Application.follow_up_date.asc()).all()
