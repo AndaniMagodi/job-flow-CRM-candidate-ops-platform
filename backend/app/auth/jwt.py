@@ -1,7 +1,9 @@
 from datetime import datetime, timedelta
+import os
 from jose import JWTError, jwt
+from app.core.config import settings
 
-SECRET_KEY = "magobitleoluvh"  # load from env in prod
+SECRET_KEY = settings.secret_key
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
 
