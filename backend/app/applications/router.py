@@ -79,7 +79,7 @@ def update_status(
         user_id=current_user.id,
         application_id=app.id,
         event="status_changed",
-        detail=f"{old_status} → {body.status}"
+        detail=f"{app.role} at {app.company}: {old_status} → {body.status}"
     )
 
     db.commit()
@@ -131,7 +131,7 @@ def add_note(
         user_id=current_user.id,
         application_id=app.id,
         event="note_added",
-        detail=app.notes[:80]
+        detail=f"{app.role} at {app.company}: {app.notes[:60]}{'...' if len(app.notes or '') > 60 else ''}"
     )
 
     db.commit()
@@ -160,7 +160,7 @@ def set_follow_up(
         user_id=current_user.id,
         application_id=app.id,
         event="follow_up_set",
-        detail=f"Follow-up set for {body.follow_up_date}"
+        detail=f"Follow-up set for {body.follow_up_date} on {app.role} at {app.company}"
     )
 
     db.commit()
