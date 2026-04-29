@@ -1,29 +1,29 @@
 from fastapi import Depends, HTTPException, Request, status
+from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 
 from app.auth.jwt import decode_access_token
 from app.db.session import get_db
 from app.models.users import User
 
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+
+
+from fastapi import Depends, HTTPException, status
+from sqlalchemy.orm import Session
+from fastapi.security import OAuth2PasswordBearer
+
+from app.auth.jwt import decode_access_token
+from app.db.session import get_db
+from app.models.users import User
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+
 
 def get_current_user(
-    request: Request,
+    token: str = Depends(oauth2_scheme),   # ✅ THIS is the key change
     db: Session = Depends(get_db)
-) -> User | None:
-
-    # ✅ IMPORTANT: allow CORS preflight
-    if request.method == "OPTIONS":
-        return None
-
-    auth_header = request.headers.get("Authorization")
-
-    if not auth_header:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Missing token"
-        )
-
-    token = auth_header.replace("Bearer ", "")
+) -> User:
 
     payload = decode_access_token(token)
 
@@ -42,7 +42,6 @@ def get_current_user(
         )
 
     return user
-
 
 # ✅ CLEAN WRAPPER (use this everywhere)
 def require_user(user: User = Depends(get_current_user)) -> User:
